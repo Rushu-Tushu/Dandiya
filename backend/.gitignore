@@ -1,6 +1,6 @@
 # Go binaries
-server
-server.exe
+/server
+/server.exe
 *.exe
 bin/
 
