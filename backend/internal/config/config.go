@@ -32,7 +32,13 @@ func Load() *Config {
 	jwtSecret := getEnv("JWT_SECRET", "dandiya-navratri-e2ee-jwt-super-secret-key-2026")
 	uploadDir := getEnv("UPLOAD_DIR", "./uploads")
 	allowedOrigin := getEnv("ALLOWED_ORIGIN", "http://localhost:5173")
-	adminEmail := getEnv("ADMIN_EMAIL", "admin@dandiya.app")
+	adminEmail := os.Getenv("ADMIN_EMAIL")
+	if adminEmail == "" {
+		adminEmail = os.Getenv("ADMIN_BOOTSTRAP_EMAIL")
+	}
+	if adminEmail == "" {
+		adminEmail = "admin@dandiya.app"
+	}
 	demoSeed := getEnv("ENABLE_DEMO_SEED", "true") == "true"
 
 	maxUploadMB, _ := strconv.ParseInt(getEnv("MAX_UPLOAD_MB", "5"), 10, 64)

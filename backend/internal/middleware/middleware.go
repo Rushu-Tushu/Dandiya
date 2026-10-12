@@ -49,13 +49,26 @@ func AdminMiddleware(adminEmail string) gin.HandlerFunc {
 		role, _ := roleVal.(string)
 		email, _ := emailVal.(string)
 
-		isAdmin := role == "admin" || (adminEmail != "" && strings.EqualFold(email, adminEmail))
+		isAdmin := role == "admin" || matchesAdminEmail(email, adminEmail)
 		if !isAdmin {
 			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Access forbidden: admin privileges required"})
 			return
 		}
 		c.Next()
 	}
+}
+
+func matchesAdminEmail(userEmail, configuredAdmins string) bool {
+	if userEmail == "" || configuredAdmins == "" {
+		return false
+	}
+	for _, part := range strings.Split(configuredAdmins, ",") {
+		clean := strings.TrimSpace(part)
+		if clean != "" && strings.EqualFold(userEmail, clean) {
+			return true
+		}
+	}
+	return false
 }
 
 func CORSMiddleware(allowedOrigin string) gin.HandlerFunc {

@@ -153,6 +153,20 @@ func NewAuthHandler(repo database.Repository, jwtSecret string, adminEmail ...st
 	}
 }
 
+func (h *AuthHandler) IsAdminEmail(email string) bool {
+	if email == "" || h.adminEmail == "" {
+		return false
+	}
+	parts := strings.Split(h.adminEmail, ",")
+	for _, p := range parts {
+		clean := strings.TrimSpace(p)
+		if clean != "" && strings.EqualFold(email, clean) {
+			return true
+		}
+	}
+	return false
+}
+
 type RegisterRequest struct {
 	Email      string            `json:"email" binding:"required,email"`
 	Password   string            `json:"password" binding:"required,min=8"`
@@ -190,7 +204,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	now := time.Now()
 	userID := uuid.New().String()
 	role := "user"
-	if h.adminEmail != "" && strings.EqualFold(req.Email, h.adminEmail) {
+	if h.IsAdminEmail(req.Email) {
 		role = "admin"
 	}
 
@@ -312,7 +326,10 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 
 	// Bootstrap admin role if matches admin email
-	if h.adminEmail != "" && strings.EqualFold(user.Email, h.adminEmail) {
+	if h.IsAdminEmail(user.Email) {
+		if user.Role != "admin" {
+			_ = h.repo.UpdateUserRole(c.Request.Context(), user.ID, "admin")
+		}
 		user.Role = "admin"
 	}
 	if user.Role == "" {
@@ -360,7 +377,10 @@ func (h *AuthHandler) Me(c *gin.Context) {
 		return
 	}
 
-	if h.adminEmail != "" && strings.EqualFold(user.Email, h.adminEmail) {
+	if h.IsAdminEmail(user.Email) {
+		if user.Role != "admin" {
+			_ = h.repo.UpdateUserRole(c.Request.Context(), user.ID, "admin")
+		}
 		user.Role = "admin"
 	}
 	if user.Role == "" {

@@ -188,6 +188,16 @@ func (r *MongoRepository) GetUserByID(ctx context.Context, id string) (*models.U
 	return &user, nil
 }
 
+func (r *MongoRepository) UpdateUserRole(ctx context.Context, userID, role string) error {
+	_, err := r.users.UpdateOne(ctx, bson.M{"_id": userID}, bson.M{
+		"$set": bson.M{
+			"role":       role,
+			"updated_at": time.Now(),
+		},
+	})
+	return err
+}
+
 // Profiles
 func (r *MongoRepository) CreateProfile(ctx context.Context, profile *models.Profile) error {
 	_, err := r.profiles.InsertOne(ctx, profile)

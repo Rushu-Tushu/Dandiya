@@ -79,6 +79,19 @@ func (m *MemoryRepository) GetUserByID(ctx context.Context, id string) (*models.
 	return user, nil
 }
 
+func (m *MemoryRepository) UpdateUserRole(ctx context.Context, userID, role string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	user, exists := m.users[userID]
+	if !exists {
+		return ErrNotFound
+	}
+	user.Role = role
+	user.UpdatedAt = time.Now()
+	return nil
+}
+
 // Profiles
 func (m *MemoryRepository) CreateProfile(ctx context.Context, profile *models.Profile) error {
 	m.mu.Lock()

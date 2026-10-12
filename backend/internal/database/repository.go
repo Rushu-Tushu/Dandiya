@@ -20,6 +20,7 @@ type Repository interface {
 	CreateUser(ctx context.Context, user *models.User) error
 	GetUserByEmail(ctx context.Context, email string) (*models.User, error)
 	GetUserByID(ctx context.Context, id string) (*models.User, error)
+	UpdateUserRole(ctx context.Context, userID, role string) error
 
 	// Profiles
 	CreateProfile(ctx context.Context, profile *models.Profile) error
