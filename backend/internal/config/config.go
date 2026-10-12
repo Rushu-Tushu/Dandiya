@@ -16,6 +16,8 @@ type Config struct {
 	UploadDir     string
 	AllowedOrigin string
 	MaxUploadMB   int64
+	AdminEmail    string
+	DemoSeed      bool
 }
 
 func Load() *Config {
@@ -30,13 +32,15 @@ func Load() *Config {
 	jwtSecret := getEnv("JWT_SECRET", "dandiya-navratri-e2ee-jwt-super-secret-key-2026")
 	uploadDir := getEnv("UPLOAD_DIR", "./uploads")
 	allowedOrigin := getEnv("ALLOWED_ORIGIN", "http://localhost:5173")
-	
+	adminEmail := getEnv("ADMIN_EMAIL", "admin@dandiya.app")
+	demoSeed := getEnv("ENABLE_DEMO_SEED", "true") == "true"
+
 	maxUploadMB, _ := strconv.ParseInt(getEnv("MAX_UPLOAD_MB", "5"), 10, 64)
 	if maxUploadMB <= 0 {
 		maxUploadMB = 5
 	}
 
-	log.Printf("[Config] Loaded: Port=%s, DB=%s (URI scheme=%s), UploadDir=%s", port, dbName, mongoURI, uploadDir)
+	log.Printf("[Config] Loaded: Port=%s, DB=%s (URI scheme=%s), UploadDir=%s, AdminEmail=%s", port, dbName, mongoURI, uploadDir, adminEmail)
 
 	return &Config{
 		Port:          port,
@@ -46,6 +50,8 @@ func Load() *Config {
 		UploadDir:     uploadDir,
 		AllowedOrigin: allowedOrigin,
 		MaxUploadMB:   maxUploadMB,
+		AdminEmail:    adminEmail,
+		DemoSeed:      demoSeed,
 	}
 }
 

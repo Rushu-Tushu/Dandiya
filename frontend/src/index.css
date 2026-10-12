@@ -1,5 +1,29 @@
 @import "tailwindcss";
 
+:root {
+  --background: #0D050B;
+  --foreground: #f9fafb;
+  --card: #160812;
+  --card-foreground: #f9fafb;
+  --border: rgba(216, 27, 96, 0.2);
+  --primary: #FF4081;
+  --primary-foreground: #ffffff;
+  --muted: #2a0413;
+  --muted-foreground: #9ca3af;
+}
+
+.dark {
+  --background: #0D050B;
+  --foreground: #f9fafb;
+  --card: #160812;
+  --card-foreground: #f9fafb;
+  --border: rgba(216, 27, 96, 0.2);
+  --primary: #FF4081;
+  --primary-foreground: #ffffff;
+  --muted: #2a0413;
+  --muted-foreground: #9ca3af;
+}
+
 @theme {
   --color-maroon: #8B0036;
   --color-maroon-dark: #620024;
@@ -11,28 +35,60 @@
   --color-green-festive: #22C55E;
   --color-gold-festive: #F59E0B;
   --color-gold-light: #FDE68A;
+  --color-wine-dark: #2A0413;
+  --color-charcoal-plum: #160812;
+  --color-near-black: #0D050B;
 
-  --font-festive: "Rozha One", "DM Serif Display", Georgia, serif;
-  --font-serif: "DM Serif Display", "Playfair Display", Georgia, serif;
-  --font-display: "Cinzel", "Playfair Display", Georgia, serif;
-  --font-sans: "Plus Jakarta Sans", "Poppins", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  /* Playwrite CA (Canada without guide lines) loaded first, followed by Playwrite CA Guides */
+  --font-display: "Playwrite CA", "Playwrite CA Guides", cursive, serif;
+  --font-hand: "Edu QLD Hand", cursive, sans-serif;
+  --font-serif: "Playwrite CA", "Playwrite CA Guides", cursive, serif;
+  --font-sans: "Inter", "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 @layer base {
   html {
     scroll-behavior: smooth;
+    background-color: #0D050B;
+    color-scheme: dark;
   }
   body {
-    background-color: #ffffff;
-    color: #1f2937;
+    background-color: #0D050B;
+    color: #f9fafb;
     font-family: var(--font-sans);
     min-height: 100vh;
     position: relative;
     overflow-x: hidden;
   }
+  form {
+    scroll-margin-top: 6rem;
+  }
 }
 
-/* Animated Primary Button Gradient */
+/* Custom Typography Helpers */
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-hand {
+  font-family: var(--font-hand);
+}
+
+.font-sans {
+  font-family: var(--font-sans);
+}
+
+/* Animated Primary Button Gradient with Edu QLD Hand font */
 @keyframes gradient-shift {
   0% {
     background-position: 0% 50%;
@@ -46,6 +102,9 @@
 }
 
 .btn-festive-primary {
+  font-family: var(--font-hand);
+  font-size: 1.1rem;
+  letter-spacing: 0.02em;
   background: linear-gradient(135deg, #8B0036 0%, #D81B60 50%, #FF4081 100%);
   background-size: 200% 200%;
   animation: gradient-shift 6s ease infinite;
@@ -65,6 +124,9 @@
 }
 
 .btn-festive-secondary {
+  font-family: var(--font-hand);
+  font-size: 1.1rem;
+  letter-spacing: 0.02em;
   background: #ffffff;
   border: 1.5px solid #D81B60;
   color: #8B0036;
@@ -72,10 +134,21 @@
   transition: all 0.25s ease;
 }
 
+.dark .btn-festive-secondary {
+  background: rgba(42, 4, 19, 0.6);
+  border-color: rgba(255, 64, 129, 0.5);
+  color: #FF80AB;
+}
+
 .btn-festive-secondary:hover {
   background: #FDF2F8;
   border-color: #8B0036;
   transform: translateY(-1px);
+}
+
+.dark .btn-festive-secondary:hover {
+  background: rgba(216, 27, 96, 0.2);
+  border-color: #FF4081;
 }
 
 /* Ambient Floating Glassy Bubbles */
@@ -104,33 +177,53 @@
 }
 
 .ambient-blob-maroon {
-  background: radial-gradient(circle, rgba(139, 0, 54, 0.18) 0%, rgba(216, 27, 96, 0.08) 50%, transparent 75%);
+  background: radial-gradient(circle, rgba(139, 0, 54, 0.20) 0%, rgba(216, 27, 96, 0.09) 50%, transparent 75%);
   filter: blur(55px);
   animation: float-slow 18s ease-in-out infinite;
 }
 
+.dark .ambient-blob-maroon {
+  background: radial-gradient(circle, rgba(139, 0, 54, 0.35) 0%, rgba(216, 27, 96, 0.15) 50%, transparent 80%);
+}
+
 .ambient-blob-purple {
-  background: radial-gradient(circle, rgba(147, 51, 234, 0.16) 0%, rgba(168, 85, 247, 0.06) 50%, transparent 75%);
+  background: radial-gradient(circle, rgba(147, 51, 234, 0.18) 0%, rgba(168, 85, 247, 0.07) 50%, transparent 75%);
   filter: blur(60px);
   animation: float-reverse 22s ease-in-out infinite;
 }
 
+.dark .ambient-blob-purple {
+  background: radial-gradient(circle, rgba(147, 51, 234, 0.30) 0%, rgba(168, 85, 247, 0.12) 50%, transparent 80%);
+}
+
 .ambient-blob-pink {
-  background: radial-gradient(circle, rgba(255, 64, 129, 0.18) 0%, rgba(244, 114, 182, 0.08) 50%, transparent 75%);
+  background: radial-gradient(circle, rgba(255, 64, 129, 0.20) 0%, rgba(244, 114, 182, 0.09) 50%, transparent 75%);
   filter: blur(55px);
   animation: float-slow 15s ease-in-out infinite;
 }
 
+.dark .ambient-blob-pink {
+  background: radial-gradient(circle, rgba(255, 64, 129, 0.32) 0%, rgba(244, 114, 182, 0.14) 50%, transparent 80%);
+}
+
 .ambient-blob-blue {
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.14) 0%, rgba(96, 165, 250, 0.06) 50%, transparent 75%);
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.16) 0%, rgba(96, 165, 250, 0.07) 50%, transparent 75%);
   filter: blur(65px);
   animation: float-reverse 20s ease-in-out infinite;
 }
 
+.dark .ambient-blob-blue {
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.25) 0%, rgba(96, 165, 250, 0.10) 50%, transparent 80%);
+}
+
 .ambient-blob-green {
-  background: radial-gradient(circle, rgba(34, 197, 94, 0.14) 0%, rgba(74, 222, 128, 0.05) 50%, transparent 75%);
+  background: radial-gradient(circle, rgba(34, 197, 94, 0.16) 0%, rgba(74, 222, 128, 0.06) 50%, transparent 75%);
   filter: blur(60px);
   animation: float-slow 25s ease-in-out infinite;
+}
+
+.dark .ambient-blob-green {
+  background: radial-gradient(circle, rgba(34, 197, 94, 0.25) 0%, rgba(74, 222, 128, 0.10) 50%, transparent 80%);
 }
 
 /* Glassmorphism Cards */
@@ -142,8 +235,18 @@
   box-shadow: 0 10px 30px -5px rgba(139, 0, 54, 0.06), 0 4px 10px -2px rgba(0, 0, 0, 0.02);
 }
 
+.dark .festive-glass-card {
+  background: rgba(22, 8, 18, 0.85);
+  border-color: rgba(216, 27, 96, 0.25);
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5), 0 4px 10px -2px rgba(139, 0, 54, 0.15);
+}
+
 .festive-glass-card:hover {
   box-shadow: 0 18px 40px -6px rgba(139, 0, 54, 0.12), 0 6px 16px -3px rgba(0, 0, 0, 0.04);
+}
+
+.dark .festive-glass-card:hover {
+  box-shadow: 0 18px 40px -6px rgba(216, 27, 96, 0.25), 0 6px 16px -3px rgba(0, 0, 0, 0.6);
 }
 
 /* Modern Bento Card Style */
@@ -158,20 +261,53 @@
   box-shadow: 0 10px 30px -8px rgba(139, 0, 54, 0.05);
 }
 
+.dark .bento-card {
+  background: rgba(22, 8, 18, 0.82);
+  border-color: rgba(216, 27, 96, 0.22);
+  box-shadow: 0 10px 30px -8px rgba(0, 0, 0, 0.45);
+}
+
 .bento-card:hover {
   transform: translateY(-4px);
   border-color: rgba(216, 27, 96, 0.35);
   box-shadow: 0 20px 45px -10px rgba(139, 0, 54, 0.12);
 }
 
+.dark .bento-card:hover {
+  border-color: rgba(255, 64, 129, 0.45);
+  box-shadow: 0 20px 45px -10px rgba(216, 27, 96, 0.28);
+}
+
 /* Shimmer animated gradient text */
 .text-shimmer-festive {
+  display: inline-block;
+  overflow: visible;
   background: linear-gradient(90deg, #8B0036 0%, #D81B60 40%, #FF4081 70%, #8B0036 100%);
   background-size: 200% auto;
   color: transparent;
   -webkit-background-clip: text;
   background-clip: text;
   animation: gradient-shift 6s linear infinite;
+}
+
+.dark .text-shimmer-festive {
+  display: inline-block;
+  overflow: visible;
+  background: linear-gradient(90deg, #FF4081 0%, #F59E0B 40%, #FF80AB 70%, #FF4081 100%);
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: gradient-shift 6s linear infinite;
+}
+
+/* Golden festive gradient text */
+.text-shimmer-gold {
+  background: linear-gradient(90deg, #F59E0B 0%, #FBBF24 50%, #F59E0B 100%);
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
 }
 
 /* Subtle Pulse Glow */
@@ -188,4 +324,27 @@
 
 .animate-pulse-glow {
   animation: pulse-glow 4s ease-in-out infinite;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(216, 27, 96, 0.2);
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 64, 129, 0.25);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(216, 27, 96, 0.45);
 }

@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'r
 import { useAuthStore } from './stores/authStore';
 import { api } from './lib/api';
 import { AmbientBlobs } from './components/common/AmbientBlobs';
+import { ScrollManager } from './components/common/ScrollManager';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 
@@ -16,6 +17,7 @@ import { MatchesPage } from './pages/MatchesPage';
 import { ChatPage } from './pages/ChatPage';
 import { ProfileEditPage } from './pages/ProfileEditPage';
 import { SafetyPage } from './pages/SafetyPage';
+import { AdminAnalyticsPage } from './pages/AdminAnalyticsPage';
 
 // Protected Route Wrapper
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -25,7 +27,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   if (isLoading) {
     return (
       <div className="min-h-[70vh] flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 rounded-full border-4 border-[#8B0036] border-t-transparent" />
+        <div className="animate-spin w-8 h-8 rounded-full border-4 border-primary border-t-transparent" />
       </div>
     );
   }
@@ -42,6 +44,11 @@ const AppLayout: React.FC = () => {
   const location = useLocation();
   const { isAuthenticated } = useAuthStore();
   const [incomingCount, setIncomingCount] = useState(0);
+
+  // Telemetry track on path change
+  useEffect(() => {
+    api.trackEvent({ eventType: 'page_view', route: location.pathname });
+  }, [location.pathname]);
 
   // Poll incoming count for notification badge if logged in
   useEffect(() => {
@@ -62,7 +69,10 @@ const AppLayout: React.FC = () => {
   const isChatRoute = location.pathname.startsWith('/chat');
 
   return (
-    <div className="min-h-screen flex flex-col relative bg-white text-gray-900 selection:bg-pink-100 selection:text-maroon">
+    <div className="min-h-screen flex flex-col relative bg-[#0D050B] text-gray-100 transition-colors duration-200 selection:bg-pink-950 selection:text-pink-300">
+      {/* Scroll manager for smooth navigation to forms or page top */}
+      <ScrollManager />
+
       {/* Ambient background soft blobs */}
       <AmbientBlobs />
 
@@ -123,6 +133,14 @@ const AppLayout: React.FC = () => {
             element={
               <ProtectedRoute>
                 <ProfileEditPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute>
+                <AdminAnalyticsPage />
               </ProtectedRoute>
             }
           />

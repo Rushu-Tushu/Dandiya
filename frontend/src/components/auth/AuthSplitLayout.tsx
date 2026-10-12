@@ -40,9 +40,9 @@ export const AuthSplitLayout: React.FC<AuthSplitLayoutProps> = ({ children, acti
   }, []);
 
   return (
-    <div className="min-h-screen w-full flex flex-col lg:flex-row bg-white relative z-10">
+    <div className="min-h-screen w-full flex flex-col lg:flex-row bg-[#0D050B] text-gray-100 relative z-10">
       {/* LEFT COLUMN: Form Container */}
-      <div className="w-full lg:w-1/2 flex flex-col justify-between p-6 sm:p-10 lg:p-14 overflow-y-auto">
+      <div className="w-full lg:w-1/2 flex flex-col justify-between p-6 sm:p-10 lg:p-14 overflow-y-auto bg-[#160812] border-r border-border">
         {/* Brand Header */}
         <div className="flex items-center justify-between mb-8">
           <Link to="/" className="flex items-center gap-2.5 group">
@@ -50,33 +50,33 @@ export const AuthSplitLayout: React.FC<AuthSplitLayoutProps> = ({ children, acti
               <DandiyaIcon className="w-full h-full text-white" />
             </div>
             <div className="flex flex-col">
-              <span className="text-xl font-bold font-festive tracking-tight text-gray-900 group-hover:text-[#8B0036] transition-colors">
-                Dandiya <span className="text-[#D81B60]">+1</span>
+              <span className="text-xl font-bold font-display tracking-tight text-foreground group-hover:text-primary transition-colors">
+                Dandiya <span className="text-primary">+1</span>
               </span>
-              <span className="text-[10px] uppercase tracking-widest text-[#8B0036] font-semibold -mt-1">
+              <span className="text-[10px] uppercase tracking-widest text-primary font-semibold -mt-1">
                 Navratri Matchmaking
               </span>
             </div>
           </Link>
 
           {/* Switch Tab Links */}
-          <div className="flex items-center gap-1 p-1 bg-gray-100 rounded-xl text-xs font-semibold">
+          <div className="flex items-center gap-1 p-1 bg-muted rounded-xl text-xs font-semibold border border-border">
             <Link
               to="/login"
-              className={`px-3 py-1.5 rounded-lg transition-all ${
+              className={`px-3 py-1.5 rounded-lg font-hand text-sm transition-all ${
                 activeTab === 'login'
-                  ? 'bg-white text-gray-900 shadow-xs'
-                  : 'text-gray-500 hover:text-gray-800'
+                  ? 'bg-card text-foreground shadow-xs'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               Sign In
             </Link>
             <Link
               to="/register"
-              className={`px-3 py-1.5 rounded-lg transition-all ${
+              className={`px-3 py-1.5 rounded-lg font-hand text-sm transition-all ${
                 activeTab === 'register'
-                  ? 'bg-[#8B0036] text-white shadow-xs'
-                  : 'text-gray-500 hover:text-gray-800'
+                  ? 'bg-primary text-primary-foreground shadow-xs'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               Join
@@ -88,7 +88,7 @@ export const AuthSplitLayout: React.FC<AuthSplitLayoutProps> = ({ children, acti
         <div className="max-w-md w-full mx-auto my-auto py-4">{children}</div>
 
         {/* Footer Note */}
-        <div className="text-center text-xs text-gray-400 mt-8 pt-4 border-t border-gray-100">
+        <div className="text-center text-xs text-muted-foreground mt-8 pt-4 border-t border-border">
           Encrypted client-side with native Web Crypto • Navratri 2026
         </div>
       </div>

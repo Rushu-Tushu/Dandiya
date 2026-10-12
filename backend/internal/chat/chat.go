@@ -118,6 +118,7 @@ func (h *ChatHandler) GetMessages(c *gin.Context) {
 }
 
 type SendMessageEnvelopeRequest struct {
+	ID              string `json:"id"` // Stable client-generated message ID
 	Ciphertext      string `json:"ciphertext" binding:"required"`
 	IV              string `json:"iv" binding:"required"`
 	EphemeralPubKey string `json:"ephemeralPubKey" binding:"required"`
@@ -160,9 +161,14 @@ func (h *ChatHandler) SendMessage(c *gin.Context) {
 		return
 	}
 
+	msgID := req.ID
+	if msgID == "" {
+		msgID = uuid.New().String()
+	}
+
 	now := time.Now()
 	msg := &models.MessageEnvelope{
-		ID:              uuid.New().String(),
+		ID:              msgID,
 		ConversationID:  convID,
 		SenderID:        currentUserID,
 		RecipientID:     recipientID,
@@ -179,6 +185,16 @@ func (h *ChatHandler) SendMessage(c *gin.Context) {
 	}
 
 	_ = h.repo.UpdateConversationLastMessage(c.Request.Context(), convID)
+
+	// Record analytics event for first message
+	_ = h.repo.TrackAnalyticsEvent(c.Request.Context(), &models.AnalyticsEvent{
+		ID:        uuid.New().String(),
+		VisitorID: currentUserID,
+		UserID:    currentUserID,
+		Type:      models.AnalyticsFirstMsgSent,
+		Path:      "/chat/" + convID,
+		CreatedAt: now,
+	})
 
 	c.JSON(http.StatusCreated, msg)
 }

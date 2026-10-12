@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { api, getAssetUrl } from '../lib/api';
-import { Profile, DanceLevel, LookingFor } from '../types';
+import { Profile } from '../types';
 import { ProfileCard } from '../components/profile/ProfileCard';
 import { Compass, Filter, Sparkles, MessageCircle, MapPin, X } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -29,6 +29,7 @@ export const DiscoveryPage: React.FC = () => {
   const fetchProfiles = useCallback(async () => {
     setLoading(true);
     try {
+      api.trackEvent({ eventType: 'page_view', route: '/discover' });
       const data = await api.discover({
         city,
         danceLevel: danceLevel || undefined,
@@ -85,16 +86,16 @@ export const DiscoveryPage: React.FC = () => {
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-pink-50 text-[#8B0036] text-xs font-semibold uppercase tracking-wider mb-2">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-pink-500/10 text-primary text-xs font-semibold uppercase tracking-wider mb-2 border border-pink-500/20">
             <Compass className="w-4 h-4 text-[#D81B60]" />
             Live Partner Discovery
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold font-serif text-gray-900">
+          <h1 className="text-3xl sm:text-4xl font-bold font-display text-foreground">
             Find Your Dandiya Partner
           </h1>
-          <p className="text-sm text-gray-600 mt-1">
-            Showing people looking for a dance partner in{' '}
-            <strong className="text-[#8B0036]">{city}</strong>
+          <p className="text-sm text-muted-foreground mt-1 font-hand text-base">
+            Showing dancers ready to celebrate Navratri in{' '}
+            <strong className="text-primary font-semibold">{city}</strong>
           </p>
         </div>
 
@@ -104,10 +105,10 @@ export const DiscoveryPage: React.FC = () => {
             <button
               key={c}
               onClick={() => setCity(c)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+              className={`px-3 py-1.5 rounded-full text-xs font-hand text-sm font-medium transition-all cursor-pointer ${
                 city.toLowerCase() === c.toLowerCase()
-                  ? 'bg-[#8B0036] text-white shadow-xs font-semibold'
-                  : 'bg-white border border-gray-200 text-gray-600 hover:border-pink-300'
+                  ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
+                  : 'bg-card border border-border text-muted-foreground hover:border-pink-400 hover:text-foreground'
               }`}
             >
               {c}
@@ -116,22 +117,32 @@ export const DiscoveryPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Demo Exploration Banner */}
+      <div className="mb-6 p-3 sm:p-4 rounded-2xl bg-amber-500/10 border border-amber-400/30 text-amber-800 dark:text-amber-200 flex items-center justify-between gap-3 text-xs">
+        <div className="flex items-center gap-2">
+          <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
+          <span>
+            <strong>Curated Community:</strong> Connect with real Dandiya enthusiasts, or explore sample profiles tagged with <span className="font-semibold underline">Demo Profile</span> to preview how Dandiya +1 matching works.
+          </span>
+        </div>
+      </div>
+
       {/* Filter Bar */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-white/90 backdrop-blur-md border border-pink-100/80 shadow-sm mb-10 flex flex-wrap items-center gap-4 text-xs">
-        <div className="flex items-center gap-2 text-gray-500 font-semibold uppercase tracking-wider">
-          <Filter className="w-4 h-4 text-[#8B0036]" />
+      <div className="p-4 sm:p-5 rounded-2xl bg-card/80 backdrop-blur-md border border-border shadow-sm mb-10 flex flex-wrap items-center gap-4 text-xs">
+        <div className="flex items-center gap-2 text-muted-foreground font-semibold uppercase tracking-wider">
+          <Filter className="w-4 h-4 text-primary" />
           <span>Filters:</span>
         </div>
 
         {/* Custom City Input */}
-        <div className="flex items-center gap-1.5 border border-gray-200 rounded-xl px-2.5 py-1.5 bg-white">
-          <MapPin className="w-3.5 h-3.5 text-gray-400" />
+        <div className="flex items-center gap-1.5 border border-border rounded-xl px-2.5 py-1.5 bg-background">
+          <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
           <input
             type="text"
             value={city}
             onChange={(e) => setCity(e.target.value)}
             placeholder="Change city..."
-            className="w-28 text-xs focus:outline-none text-gray-800"
+            className="w-28 text-xs focus:outline-none bg-transparent text-foreground placeholder:text-muted-foreground"
           />
         </div>
 
@@ -139,7 +150,7 @@ export const DiscoveryPage: React.FC = () => {
         <select
           value={danceLevel}
           onChange={(e) => setDanceLevel(e.target.value)}
-          className="border border-gray-200 rounded-xl px-3 py-1.5 bg-white text-gray-700 focus:outline-none"
+          className="border border-border rounded-xl px-3 py-1.5 bg-background text-foreground focus:outline-none cursor-pointer"
         >
           <option value="">All Dance Levels</option>
           <option value="Beginner">Beginner</option>
@@ -151,7 +162,7 @@ export const DiscoveryPage: React.FC = () => {
         <select
           value={lookingFor}
           onChange={(e) => setLookingFor(e.target.value)}
-          className="border border-gray-200 rounded-xl px-3 py-1.5 bg-white text-gray-700 focus:outline-none"
+          className="border border-border rounded-xl px-3 py-1.5 bg-background text-foreground focus:outline-none cursor-pointer"
         >
           <option value="">Looking for: Anyone</option>
           <option value="Partner">Partner</option>
@@ -165,7 +176,7 @@ export const DiscoveryPage: React.FC = () => {
               setDanceLevel('');
               setLookingFor('');
             }}
-            className="text-[#8B0036] hover:underline font-semibold ml-auto"
+            className="text-primary hover:underline font-semibold ml-auto cursor-pointer"
           >
             Clear Filters
           </button>
@@ -178,20 +189,20 @@ export const DiscoveryPage: React.FC = () => {
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <div
               key={i}
-              className="h-96 rounded-3xl bg-white/60 animate-pulse border border-pink-100/50"
+              className="h-96 rounded-3xl bg-card/60 animate-pulse border border-border"
             />
           ))}
         </div>
       ) : profiles.length === 0 ? (
-        <div className="text-center py-20 bg-white/70 backdrop-blur-md rounded-3xl border border-pink-100 max-w-lg mx-auto p-8 space-y-4">
-          <div className="w-16 h-16 mx-auto rounded-full bg-pink-50 flex items-center justify-center text-[#8B0036]">
+        <div className="text-center py-20 bg-card/70 backdrop-blur-md rounded-3xl border border-border max-w-lg mx-auto p-8 space-y-4">
+          <div className="w-16 h-16 mx-auto rounded-full bg-pink-500/10 flex items-center justify-center text-primary">
             <Sparkles className="w-8 h-8 text-[#D81B60]" />
           </div>
-          <h3 className="text-xl font-bold font-serif text-gray-900">
+          <h3 className="text-xl font-bold font-serif text-foreground">
             No dancers found in {city} yet
           </h3>
-          <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
-            Be the pioneer! Try selecting another nearby city like Ahmedabad, Mumbai, or Pune, or invite your friends.
+          <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+            Be the first! Try selecting another nearby city like Ahmedabad, Vadodara, Mumbai, or Pune, or invite friends to join.
           </p>
         </div>
       ) : (
@@ -211,10 +222,10 @@ export const DiscoveryPage: React.FC = () => {
       {/* Mutual Match Celebration Modal */}
       {matchedPartner && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in zoom-in-95">
-          <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border-2 border-pink-200 p-8 text-center space-y-6">
+          <div className="relative w-full max-w-md bg-card text-card-foreground rounded-3xl shadow-2xl border-2 border-primary/30 p-8 text-center space-y-6">
             <button
               onClick={() => setMatchedPartner(null)}
-              className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 rounded-full"
+              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-foreground rounded-full cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -222,10 +233,10 @@ export const DiscoveryPage: React.FC = () => {
             <div className="text-5xl">🎉</div>
 
             <div className="space-y-2">
-              <h2 className="text-2xl sm:text-3xl font-bold font-serif text-gray-900">
+              <h2 className="text-2xl sm:text-3xl font-bold font-serif text-foreground">
                 You matched!
               </h2>
-              <p className="text-sm text-gray-600 font-medium">
+              <p className="text-sm text-muted-foreground font-medium">
                 &ldquo;You both want someone to play Dandiya with.&rdquo;
               </p>
             </div>
@@ -240,12 +251,12 @@ export const DiscoveryPage: React.FC = () => {
                     )}`
                   }
                   alt={matchedPartner.profile.firstName}
-                  className="w-full h-full object-cover rounded-full bg-white"
+                  className="w-full h-full object-cover rounded-full bg-card"
                 />
               </div>
             </div>
 
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-muted-foreground">
               {matchedPartner.profile.firstName} is in {matchedPartner.profile.city} (
               {matchedPartner.profile.danceLevel} dancer). Private encrypted chat is now open!
             </p>
@@ -253,7 +264,7 @@ export const DiscoveryPage: React.FC = () => {
             <div className="pt-2">
               <button
                 onClick={() => navigate(`/chat/${matchedPartner.conversationId}`)}
-                className="w-full py-3.5 rounded-2xl font-semibold text-base btn-festive-primary text-white shadow-xl flex items-center justify-center gap-2"
+                className="w-full py-3.5 rounded-2xl font-semibold text-base btn-festive-primary text-white shadow-xl flex items-center justify-center gap-2 cursor-pointer"
               >
                 <MessageCircle className="w-5 h-5" />
                 Start Chat

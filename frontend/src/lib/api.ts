@@ -6,6 +6,11 @@ import {
   Conversation,
   MessageEnvelope,
   KeyBundle,
+  EncryptedKeyBackup,
+  AnalyticsOverview,
+  AnalyticsFunnel,
+  TimeseriesPoint,
+  AnalyticsTraffic,
   DanceLevel,
   LookingFor,
 } from '../types';
@@ -76,6 +81,19 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   }
 
   return res.json();
+}
+
+function getVisitorId(): string {
+  try {
+    let id = localStorage.getItem('dandiya_visitor_id');
+    if (!id) {
+      id = 'v-' + Math.random().toString(36).substring(2, 11) + '-' + Date.now().toString(36);
+      localStorage.setItem('dandiya_visitor_id', id);
+    }
+    return id;
+  } catch {
+    return 'v-anonymous';
+  }
 }
 
 export const api = {
@@ -233,6 +251,7 @@ export const api = {
   },
 
   async sendMessageEnvelope(convId: string, envelope: {
+    id?: string;
     ciphertext: string;
     iv: string;
     ephemeralPubKey: string;
@@ -244,7 +263,7 @@ export const api = {
     });
   },
 
-  // Crypto Key Bundles
+  // E2EE Crypto Key Bundles & Zero-Knowledge Key Backups
   async publishKeyBundle(identityPublicKey: string): Promise<{ message: string }> {
     return request('/crypto/bundle', {
       method: 'POST',
@@ -254,6 +273,87 @@ export const api = {
 
   async getKeyBundle(userId: string): Promise<KeyBundle> {
     return request(`/crypto/bundle/${userId}`);
+  },
+
+  async saveKeyBackup(data: {
+    encryptedKeyJWK: string;
+    iv: string;
+    salt: string;
+    iterations?: number;
+  }): Promise<{ message: string }> {
+    return request('/crypto/backup', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async getKeyBackup(): Promise<EncryptedKeyBackup> {
+    return request('/crypto/backup');
+  },
+
+  // Analytics
+  async trackEvent(data: {
+    visitorId?: string;
+    type?: string;
+    eventType?: string;
+    path?: string;
+    route?: string;
+    referrer?: string;
+    utmSource?: string;
+    utmMedium?: string;
+    utmCampaign?: string;
+  }): Promise<void> {
+    try {
+      const payload = {
+        visitorId: data.visitorId || getVisitorId(),
+        type: data.type || data.eventType || 'page_view',
+        path: data.path || data.route || window.location.pathname,
+        referrer: data.referrer || (typeof document !== 'undefined' ? document.referrer : undefined),
+        utmSource: data.utmSource,
+        utmMedium: data.utmMedium,
+        utmCampaign: data.utmCampaign,
+      };
+      await request('/analytics/track', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+    } catch {
+      // Analytics tracking failures should not disrupt user experience
+    }
+  },
+
+  // Admin Protected Analytics
+  async getAdminAnalyticsOverview(days = 30): Promise<AnalyticsOverview> {
+    return request(`/admin/analytics/overview?days=${days}`);
+  },
+
+  async getAdminAnalyticsFunnel(days = 30): Promise<AnalyticsFunnel> {
+    return request(`/admin/analytics/funnel?days=${days}`);
+  },
+
+  async getAdminAnalyticsTimeseries(days = 14): Promise<{ points: TimeseriesPoint[] }> {
+    return request(`/admin/analytics/timeseries?days=${days}`);
+  },
+
+  async getAdminAnalyticsTraffic(days = 30): Promise<AnalyticsTraffic> {
+    return request(`/admin/analytics/traffic?days=${days}`);
+  },
+
+  // Aliases for convenience
+  async getAnalyticsOverview(days = 30): Promise<AnalyticsOverview> {
+    return this.getAdminAnalyticsOverview(days);
+  },
+
+  async getAnalyticsFunnel(days = 30): Promise<AnalyticsFunnel> {
+    return this.getAdminAnalyticsFunnel(days);
+  },
+
+  async getAnalyticsTimeseries(days = 14): Promise<{ points: TimeseriesPoint[] }> {
+    return this.getAdminAnalyticsTimeseries(days);
+  },
+
+  async getAnalyticsTraffic(days = 30): Promise<AnalyticsTraffic> {
+    return this.getAdminAnalyticsTraffic(days);
   },
 
   // Safety

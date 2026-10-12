@@ -240,11 +240,15 @@ func (c *Client) readPump() {
 			}
 			// Server stores OPAQUE encrypted envelope
 			envelope := incoming.MessageEnvelope
-			envelope.ID = uuid.New().String()
+			if envelope.ID == "" {
+				envelope.ID = uuid.New().String()
+			}
 			envelope.ConversationID = incoming.ConversationID
 			envelope.SenderID = c.userID
 			envelope.RecipientID = recipientID
-			envelope.CreatedAt = time.Now()
+			if envelope.CreatedAt.IsZero() {
+				envelope.CreatedAt = time.Now()
+			}
 
 			saveCtx, saveCancel := context.WithTimeout(context.Background(), 2*time.Second)
 			_ = c.hub.repo.SaveMessage(saveCtx, envelope)

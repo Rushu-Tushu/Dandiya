@@ -6,6 +6,8 @@ export type MatchStatus = 'ACTIVE' | 'UNMATCHED' | 'BLOCKED';
 export interface User {
   id: string;
   email: string;
+  role?: string;
+  isDemo?: boolean;
   createdAt: string;
 }
 
@@ -21,6 +23,7 @@ export interface Profile {
   lookingFor: LookingFor;
   bio: string;
   photoUrl: string;
+  isDemo?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -81,9 +84,62 @@ export interface KeyBundle {
   updatedAt: string;
 }
 
+export interface EncryptedKeyBackup {
+  id: string;
+  userId: string;
+  encryptedKeyJWK: string;
+  iv: string;
+  salt: string;
+  iterations: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Block {
   id: string;
   blockerId: string;
   blockedId: string;
   createdAt: string;
+}
+
+// Analytics Types
+export interface AnalyticsOverview {
+  totalUniqueVisitors: number;
+  totalPageViews: number;
+  registeredUsers: number;
+  completedProfiles: number;
+  dailyActiveUsers: number;
+  weeklyActiveUsers: number;
+  returningVisitors: number;
+  realMatchesCreated: number;
+  realConversations: number;
+}
+
+export interface FunnelStep {
+  name: string;
+  count: number;
+  conversionRate: number;
+}
+
+export interface AnalyticsFunnel {
+  steps: FunnelStep[];
+}
+
+export interface TimeseriesPoint {
+  date: string;
+  visitors: number;
+  pageViews: number;
+  signups: number;
+  activeUsers: number;
+}
+
+export interface TrafficItem {
+  key: string;
+  count: number;
+}
+
+export interface AnalyticsTraffic {
+  topRoutes: TrafficItem[];
+  utmSources: TrafficItem[];
+  referrers: TrafficItem[];
 }

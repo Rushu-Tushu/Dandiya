@@ -23,6 +23,10 @@ export const ProfileEditPage: React.FC = () => {
   const [savedSuccess, setSavedSuccess] = useState(false);
 
   useEffect(() => {
+    api.trackEvent({ eventType: 'page_view', route: '/profile' });
+  }, []);
+
+  useEffect(() => {
     if (profile) {
       setFirstName(profile.firstName);
       setLastName(profile.lastName || '');
@@ -70,6 +74,7 @@ export const ProfileEditPage: React.FC = () => {
 
       updateProfileState(updated);
       setSavedSuccess(true);
+      api.trackEvent({ eventType: 'profile_completed' });
       setTimeout(() => setSavedSuccess(false), 3000);
     } catch (err: any) {
       alert(err.message || 'Failed to update profile');
@@ -80,19 +85,19 @@ export const ProfileEditPage: React.FC = () => {
 
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-10 relative z-10">
-      <div className="bg-white/95 backdrop-blur-md rounded-3xl shadow-xl border border-pink-100 p-8 sm:p-10 space-y-6">
+      <div className="bg-card text-card-foreground backdrop-blur-md rounded-3xl shadow-xl border border-border p-8 sm:p-10 space-y-6">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-pink-50 border border-pink-200 flex items-center justify-center text-[#8B0036]">
+          <div className="w-12 h-12 rounded-2xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center text-primary">
             <User className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold font-serif text-gray-900">Edit Your Profile</h1>
-            <p className="text-xs text-gray-500">Update your Dandiya preferences and details</p>
+            <h1 className="text-2xl font-bold font-display text-foreground">Edit Your Profile</h1>
+            <p className="text-sm text-muted-foreground font-hand">Update your Dandiya preferences and details</p>
           </div>
         </div>
 
         {savedSuccess && (
-          <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2">
+          <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs flex items-center gap-2">
             <Check className="w-4 h-4 text-emerald-600" />
             <span>Profile saved successfully!</span>
           </div>
@@ -101,11 +106,11 @@ export const ProfileEditPage: React.FC = () => {
         <form onSubmit={handleSave} className="space-y-6 text-sm">
           {/* Avatar section */}
           <div>
-            <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
+            <label className="block text-xs font-semibold text-foreground uppercase tracking-wider mb-2">
               Profile Photo
             </label>
             <div className="flex items-center gap-4">
-              <div className="w-20 h-20 rounded-full border-2 border-[#D81B60] overflow-hidden bg-gray-50 shrink-0">
+              <div className="w-20 h-20 rounded-full border-2 border-primary overflow-hidden bg-muted shrink-0">
                 <img
                   src={
                     getAssetUrl(photoPreview) ||
@@ -118,7 +123,7 @@ export const ProfileEditPage: React.FC = () => {
                 />
               </div>
 
-              <label className="cursor-pointer px-4 py-2 rounded-xl border border-pink-200 text-xs font-semibold text-[#8B0036] hover:bg-pink-50 transition-colors flex items-center gap-1.5">
+              <label className="cursor-pointer px-4 py-2 rounded-xl border border-border text-xs font-semibold text-primary hover:bg-muted transition-colors flex items-center gap-1.5">
                 <Upload className="w-4 h-4" />
                 Change Photo
                 <input
@@ -133,7 +138,7 @@ export const ProfileEditPage: React.FC = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-semibold text-foreground uppercase tracking-wider mb-1">
                 First Name *
               </label>
               <input
@@ -141,26 +146,26 @@ export const ProfileEditPage: React.FC = () => {
                 required
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-pink-500 text-sm"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-semibold text-foreground uppercase tracking-wider mb-1">
                 Last Name (Optional)
               </label>
               <input
                 type="text"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-pink-500 text-sm"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-semibold text-foreground uppercase tracking-wider mb-1">
                 Age
               </label>
               <input
@@ -169,18 +174,18 @@ export const ProfileEditPage: React.FC = () => {
                 max={99}
                 value={age}
                 onChange={(e) => setAge(Number(e.target.value))}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-pink-500 text-sm"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-semibold text-foreground uppercase tracking-wider mb-1">
                 Sex
               </label>
               <select
                 value={sex}
                 onChange={(e) => setSex(e.target.value as any)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-pink-500 text-sm bg-white"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm cursor-pointer"
               >
                 <option value="F">Female (♀)</option>
                 <option value="M">Male (♂)</option>
@@ -191,7 +196,7 @@ export const ProfileEditPage: React.FC = () => {
 
           {/* City */}
           <div>
-            <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1 flex items-center gap-1">
+            <label className="block text-xs font-semibold text-foreground uppercase tracking-wider mb-1 flex items-center gap-1">
               <MapPin className="w-3.5 h-3.5 text-[#D81B60]" />
               <span>City</span>
             </label>
@@ -199,7 +204,7 @@ export const ProfileEditPage: React.FC = () => {
               type="text"
               value={city}
               onChange={(e) => setCity(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-pink-500 text-sm mb-2"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm mb-2"
             />
             <div className="flex flex-wrap gap-1.5">
               {CITIES.map((c) => (
@@ -207,10 +212,10 @@ export const ProfileEditPage: React.FC = () => {
                   key={c}
                   type="button"
                   onClick={() => setCity(c)}
-                  className={`px-2.5 py-1 rounded-lg text-xs transition-colors ${
+                  className={`px-2.5 py-1 rounded-lg text-xs transition-colors cursor-pointer ${
                     city === c
-                      ? 'bg-[#8B0036] text-white font-semibold'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      ? 'bg-primary text-primary-foreground font-semibold shadow-xs'
+                      : 'bg-muted text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   {c}
@@ -221,7 +226,7 @@ export const ProfileEditPage: React.FC = () => {
 
           {/* Dance Level */}
           <div>
-            <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
+            <label className="block text-xs font-semibold text-foreground uppercase tracking-wider mb-2">
               Dance Level
             </label>
             <div className="grid grid-cols-3 gap-2">
@@ -230,15 +235,15 @@ export const ProfileEditPage: React.FC = () => {
                   key={lvl}
                   type="button"
                   onClick={() => setDanceLevel(lvl)}
-                  className={`p-3 rounded-2xl border text-center transition-all ${
+                  className={`p-3 rounded-2xl border text-center transition-all cursor-pointer ${
                     danceLevel === lvl
-                      ? 'border-[#8B0036] bg-pink-50 text-[#8B0036] font-bold shadow-xs'
-                      : 'border-gray-200 text-gray-700'
+                      ? 'border-primary bg-primary/10 text-primary font-bold shadow-xs'
+                      : 'border-border text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   <Flame
                     className={`w-4 h-4 mx-auto mb-1 ${
-                      danceLevel === lvl ? 'text-[#D81B60]' : 'text-gray-400'
+                      danceLevel === lvl ? 'text-[#D81B60]' : 'text-muted-foreground'
                     }`}
                   />
                   <span className="text-xs">{lvl}</span>
@@ -249,17 +254,17 @@ export const ProfileEditPage: React.FC = () => {
 
           {/* Looking For */}
           <div>
-            <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
+            <label className="block text-xs font-semibold text-foreground uppercase tracking-wider mb-2">
               Looking For
             </label>
             <div className="grid grid-cols-3 gap-2">
               <button
                 type="button"
                 onClick={() => setLookingFor('Partner')}
-                className={`p-3 rounded-2xl border text-center transition-all ${
+                className={`p-3 rounded-2xl border text-center transition-all cursor-pointer ${
                   lookingFor === 'Partner'
-                    ? 'border-[#8B0036] bg-pink-50 text-[#8B0036] font-bold shadow-xs'
-                    : 'border-gray-200 text-gray-700'
+                    ? 'border-primary bg-primary/10 text-primary font-bold shadow-xs'
+                    : 'border-border text-muted-foreground hover:text-foreground'
                 }`}
               >
                 <Heart className="w-4 h-4 mx-auto mb-1 text-rose-500" />
@@ -269,10 +274,10 @@ export const ProfileEditPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setLookingFor('Friends')}
-                className={`p-3 rounded-2xl border text-center transition-all ${
+                className={`p-3 rounded-2xl border text-center transition-all cursor-pointer ${
                   lookingFor === 'Friends'
-                    ? 'border-[#8B0036] bg-pink-50 text-[#8B0036] font-bold shadow-xs'
-                    : 'border-gray-200 text-gray-700'
+                    ? 'border-primary bg-primary/10 text-primary font-bold shadow-xs'
+                    : 'border-border text-muted-foreground hover:text-foreground'
                 }`}
               >
                 <Users className="w-4 h-4 mx-auto mb-1 text-pink-500" />
@@ -282,10 +287,10 @@ export const ProfileEditPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setLookingFor('Group')}
-                className={`p-3 rounded-2xl border text-center transition-all ${
+                className={`p-3 rounded-2xl border text-center transition-all cursor-pointer ${
                   lookingFor === 'Group'
-                    ? 'border-[#8B0036] bg-pink-50 text-[#8B0036] font-bold shadow-xs'
-                    : 'border-gray-200 text-gray-700'
+                    ? 'border-primary bg-primary/10 text-primary font-bold shadow-xs'
+                    : 'border-border text-muted-foreground hover:text-foreground'
                 }`}
               >
                 <Sparkles className="w-4 h-4 mx-auto mb-1 text-blue-500" />
@@ -296,7 +301,7 @@ export const ProfileEditPage: React.FC = () => {
 
           {/* Bio */}
           <div>
-            <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+            <label className="block text-xs font-semibold text-foreground uppercase tracking-wider mb-1">
               Short Bio
             </label>
             <textarea
@@ -304,7 +309,7 @@ export const ProfileEditPage: React.FC = () => {
               onChange={(e) => setBio(e.target.value)}
               maxLength={200}
               rows={3}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-pink-500 text-sm"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm"
             />
           </div>
 
@@ -312,7 +317,7 @@ export const ProfileEditPage: React.FC = () => {
             <button
               type="submit"
               disabled={saving}
-              className="w-full py-3 rounded-2xl font-semibold text-sm btn-festive-primary text-white shadow-lg disabled:opacity-50"
+              className="w-full py-3 rounded-2xl font-semibold text-sm btn-festive-primary text-white shadow-lg disabled:opacity-50 cursor-pointer"
             >
               {saving ? 'Saving...' : 'Save Profile Changes'}
             </button>

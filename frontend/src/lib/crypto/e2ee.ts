@@ -1,4 +1,11 @@
-import { getIdentityKeyPair, saveIdentityKeyPair } from './keyStore';
+import {
+  getIdentityKeyPair,
+  saveIdentityKeyPair,
+  getStoredKeyPairRecord,
+  saveRawKeyPairRecord,
+  StoredKeyPair,
+} from './keyStore';
+import { api } from '../api';
 
 // Base64 helpers
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
@@ -29,13 +36,146 @@ export class E2EEService {
   private static sessionKeyCache = new Map<string, CryptoKey>();
 
   /**
-   * Initializes or loads the client's Identity Key Pair.
-   * Returns the public key JSON string ready for publication to backend.
+   * Derives an AES-256-GCM Key Encryption Key (KEK) using PBKDF2 (SHA-256).
+   * Zero-Knowledge guarantee: password/passphrase never leaves client.
    */
-  public static async initClientKeys(userId: string): Promise<string> {
+  private static async deriveKeyEncryptionKey(
+    passphrase: string,
+    salt: Uint8Array,
+    iterations = 100000
+  ): Promise<CryptoKey> {
+    const enc = new TextEncoder();
+    const baseKey = await window.crypto.subtle.importKey(
+      'raw',
+      enc.encode(passphrase),
+      { name: 'PBKDF2' },
+      false,
+      ['deriveKey']
+    );
+
+    return window.crypto.subtle.deriveKey(
+      {
+        name: 'PBKDF2',
+        salt: salt as any,
+        iterations: iterations,
+        hash: 'SHA-256',
+      },
+      baseKey,
+      { name: 'AES-GCM', length: 256 },
+      false,
+      ['encrypt', 'decrypt']
+    );
+  }
+
+  /**
+   * Creates an opaque zero-knowledge encrypted backup of the user's private key JWK.
+   * Transmitted payload contains ONLY AES-GCM ciphertext + random IV + salt.
+   * Server NEVER receives plaintext keys.
+   */
+  public static async createEncryptedKeyBackup(
+    userId: string,
+    passphrase: string
+  ): Promise<{ encryptedKeyJWK: string; iv: string; salt: string; iterations: number }> {
+    const record = await getStoredKeyPairRecord(userId);
+    if (!record) {
+      throw new Error('No local identity key found to back up.');
+    }
+
+    const salt = window.crypto.getRandomValues(new Uint8Array(16));
+    const iv = window.crypto.getRandomValues(new Uint8Array(12));
+    const iterations = 100000;
+
+    const kek = await this.deriveKeyEncryptionKey(passphrase, salt, iterations);
+    const plaintextBytes = new TextEncoder().encode(JSON.stringify(record));
+
+    const encryptedBuffer = await window.crypto.subtle.encrypt(
+      {
+        name: 'AES-GCM',
+        iv: iv,
+      },
+      kek,
+      plaintextBytes
+    );
+
+    return {
+      encryptedKeyJWK: arrayBufferToBase64(encryptedBuffer),
+      iv: arrayBufferToBase64(iv.buffer),
+      salt: arrayBufferToBase64(salt.buffer),
+      iterations,
+    };
+  }
+
+  /**
+   * Decrypts an opaque backup envelope using the user's passphrase/credential
+   * and restores the identical Identity KeyPair into this device's IndexedDB.
+   */
+  public static async restoreFromEncryptedKeyBackup(
+    userId: string,
+    backup: { encryptedKeyJWK: string; iv: string; salt: string; iterations?: number },
+    passphrase: string
+  ): Promise<boolean> {
+    try {
+      const salt = new Uint8Array(base64ToArrayBuffer(backup.salt));
+      const iv = new Uint8Array(base64ToArrayBuffer(backup.iv));
+      const ciphertext = base64ToArrayBuffer(backup.encryptedKeyJWK);
+      const iterations = backup.iterations || 100000;
+
+      const kek = await this.deriveKeyEncryptionKey(passphrase, salt, iterations);
+
+      const decryptedBuffer = await window.crypto.subtle.decrypt(
+        {
+          name: 'AES-GCM',
+          iv: iv,
+        },
+        kek,
+        ciphertext
+      );
+
+      const jsonStr = new TextDecoder().decode(decryptedBuffer);
+      const record: StoredKeyPair = JSON.parse(jsonStr);
+
+      if (record && record.privateKeyJWK && record.publicKeyJWK) {
+        await saveRawKeyPairRecord({
+          userId,
+          publicKeyJWK: record.publicKeyJWK,
+          privateKeyJWK: record.privateKeyJWK,
+          createdAt: record.createdAt || Date.now(),
+        });
+        this.sessionKeyCache.clear();
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.warn('[E2EE] Could not restore backup with provided credential:', err);
+      return false;
+    }
+  }
+
+  /**
+   * Initializes or loads the client's Identity Key Pair.
+   * If on a new device (e.g. mobile) and a passphrase/credential is available,
+   * attempts to restore the canonical keypair from the zero-knowledge backup first.
+   */
+  public static async initClientKeys(userId: string, passphrase?: string): Promise<string> {
     let keyPair = await getIdentityKeyPair(userId);
+
+    // If no local keypair, attempt zero-knowledge restoration if backup exists
+    if (!keyPair && passphrase) {
+      try {
+        const backup = await api.getKeyBackup();
+        if (backup && backup.encryptedKeyJWK) {
+          const restored = await this.restoreFromEncryptedKeyBackup(userId, backup, passphrase);
+          if (restored) {
+            keyPair = await getIdentityKeyPair(userId);
+          }
+        }
+      } catch {
+        // No backup on server yet
+      }
+    }
+
     if (!keyPair) {
-      // Generate new NIST P-256 ECDH KeyPair
+      // Generate new NIST P-256 ECDH KeyPair on this device
       keyPair = await window.crypto.subtle.generateKey(
         {
           name: 'ECDH',
@@ -45,6 +185,16 @@ export class E2EEService {
         ['deriveKey', 'deriveBits']
       );
       await saveIdentityKeyPair(userId, keyPair);
+
+      // If passphrase was provided, automatically upload zero-knowledge backup to backend
+      if (passphrase) {
+        try {
+          const backupPayload = await this.createEncryptedKeyBackup(userId, passphrase);
+          await api.saveKeyBackup(backupPayload);
+        } catch (backupErr) {
+          console.warn('[E2EE] Automatic key backup creation notice:', backupErr);
+        }
+      }
     }
 
     const pubJWK = await window.crypto.subtle.exportKey('jwk', keyPair.publicKey);
@@ -178,7 +328,7 @@ export class E2EEService {
 
       return new TextDecoder().decode(decryptedBuffer);
     } catch (err) {
-      console.error('[E2EE] Decryption or integrity check failed:', err);
+      console.warn('[E2EE] Decryption or integrity check notice:', err);
       return '⚠️ [Decryption error: message integrity compromised or invalid key]';
     }
   }

@@ -92,13 +92,22 @@ func VerifyPassword(password, encodedHash string) (bool, error) {
 type JWTClaims struct {
 	UserID string `json:"userId"`
 	Email  string `json:"email"`
+	Role   string `json:"role"`
 	jwt.RegisteredClaims
 }
 
 func GenerateToken(userID, email, secret string) (string, error) {
+	return GenerateTokenWithRole(userID, email, "user", secret)
+}
+
+func GenerateTokenWithRole(userID, email, role, secret string) (string, error) {
+	if role == "" {
+		role = "user"
+	}
 	claims := JWTClaims{
 		UserID: userID,
 		Email:  email,
+		Role:   role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(7 * 24 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -127,14 +136,20 @@ func ParseToken(tokenStr, secret string) (*JWTClaims, error) {
 
 // Handlers
 type AuthHandler struct {
-	repo      database.Repository
-	jwtSecret string
+	repo       database.Repository
+	jwtSecret  string
+	adminEmail string
 }
 
-func NewAuthHandler(repo database.Repository, jwtSecret string) *AuthHandler {
+func NewAuthHandler(repo database.Repository, jwtSecret string, adminEmail ...string) *AuthHandler {
+	admin := "admin@dandiya.app"
+	if len(adminEmail) > 0 && adminEmail[0] != "" {
+		admin = adminEmail[0]
+	}
 	return &AuthHandler{
-		repo:      repo,
-		jwtSecret: jwtSecret,
+		repo:       repo,
+		jwtSecret:  jwtSecret,
+		adminEmail: admin,
 	}
 }
 
@@ -174,11 +189,18 @@ func (h *AuthHandler) Register(c *gin.Context) {
 
 	now := time.Now()
 	userID := uuid.New().String()
+	role := "user"
+	if h.adminEmail != "" && strings.EqualFold(req.Email, h.adminEmail) {
+		role = "admin"
+	}
+
 	user := &models.User{
 		ID:           userID,
 		Email:        req.Email,
 		PasswordHash: hash,
 		Status:       models.UserStatusActive,
+		Role:         role,
+		IsDemo:       false,
 		CreatedAt:    now,
 		UpdatedAt:    now,
 	}
@@ -204,6 +226,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		LookingFor: req.LookingFor,
 		Bio:        strings.TrimSpace(req.Bio),
 		PhotoURL:   req.PhotoURL,
+		IsDemo:     false,
 		CreatedAt:  now,
 		UpdatedAt:  now,
 	}
@@ -213,11 +236,29 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	token, err := GenerateToken(userID, user.Email, h.jwtSecret)
+	token, err := GenerateTokenWithRole(userID, user.Email, user.Role, h.jwtSecret)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate session token"})
 		return
 	}
+
+	// Record analytics events
+	_ = h.repo.TrackAnalyticsEvent(c.Request.Context(), &models.AnalyticsEvent{
+		ID:        uuid.New().String(),
+		VisitorID: userID,
+		UserID:    userID,
+		Type:      models.AnalyticsSignupCompleted,
+		Path:      "/register",
+		CreatedAt: now,
+	})
+	_ = h.repo.TrackAnalyticsEvent(c.Request.Context(), &models.AnalyticsEvent{
+		ID:        uuid.New().String(),
+		VisitorID: userID,
+		UserID:    userID,
+		Type:      models.AnalyticsProfileComplete,
+		Path:      "/profile",
+		CreatedAt: now,
+	})
 
 	// Set HTTP-only cookie
 	c.SetCookie("dandiya_token", token, 3600*24*7, "/", "", false, true)
@@ -227,6 +268,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		"user": gin.H{
 			"id":        user.ID,
 			"email":     user.Email,
+			"role":      user.Role,
 			"createdAt": user.CreatedAt,
 		},
 		"profile": profile,
@@ -252,6 +294,12 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
+	// Demo profiles cannot authenticate
+	if user.IsDemo {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Demo profiles are illustrative and cannot be logged into"})
+		return
+	}
+
 	match, err := VerifyPassword(req.Password, user.PasswordHash)
 	if err != nil || !match {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
@@ -263,7 +311,15 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	token, err := GenerateToken(user.ID, user.Email, h.jwtSecret)
+	// Bootstrap admin role if matches admin email
+	if h.adminEmail != "" && strings.EqualFold(user.Email, h.adminEmail) {
+		user.Role = "admin"
+	}
+	if user.Role == "" {
+		user.Role = "user"
+	}
+
+	token, err := GenerateTokenWithRole(user.ID, user.Email, user.Role, h.jwtSecret)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to issue session token"})
 		return
@@ -278,6 +334,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		"user": gin.H{
 			"id":        user.ID,
 			"email":     user.Email,
+			"role":      user.Role,
 			"createdAt": user.CreatedAt,
 		},
 		"profile": profile,
@@ -303,6 +360,13 @@ func (h *AuthHandler) Me(c *gin.Context) {
 		return
 	}
 
+	if h.adminEmail != "" && strings.EqualFold(user.Email, h.adminEmail) {
+		user.Role = "admin"
+	}
+	if user.Role == "" {
+		user.Role = "user"
+	}
+
 	profile, err := h.repo.GetProfileByUserID(c.Request.Context(), userID)
 	if err != nil && !errors.Is(err, database.ErrNotFound) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get profile"})
@@ -313,6 +377,7 @@ func (h *AuthHandler) Me(c *gin.Context) {
 		"user": gin.H{
 			"id":        user.ID,
 			"email":     user.Email,
+			"role":      user.Role,
 			"createdAt": user.CreatedAt,
 		},
 		"profile": profile,

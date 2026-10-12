@@ -91,6 +91,14 @@ class WebSocketClient {
     };
   }
 
+  public isOpen(): boolean {
+    return !!this.ws && this.ws.readyState === WebSocket.OPEN;
+  }
+
+  public isConnectingState(): boolean {
+    return this.isConnecting || (!!this.ws && this.ws.readyState === WebSocket.CONNECTING);
+  }
+
   public send(data: any) {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(data));

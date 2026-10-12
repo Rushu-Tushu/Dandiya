@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/dandiya/dandiya-plus-one/internal/analytics"
 	"github.com/dandiya/dandiya-plus-one/internal/auth"
 	"github.com/dandiya/dandiya-plus-one/internal/blocks"
 	"github.com/dandiya/dandiya-plus-one/internal/chat"
@@ -22,6 +23,7 @@ import (
 	"github.com/dandiya/dandiya-plus-one/internal/profiles"
 	"github.com/dandiya/dandiya-plus-one/internal/reports"
 	"github.com/dandiya/dandiya-plus-one/internal/requests"
+	"github.com/dandiya/dandiya-plus-one/internal/seed"
 	"github.com/dandiya/dandiya-plus-one/internal/storage"
 	"github.com/dandiya/dandiya-plus-one/internal/websocket"
 	"github.com/gin-gonic/gin"
@@ -37,6 +39,17 @@ func main() {
 		log.Fatalf("Fatal: repository initialization error: %v", err)
 	}
 
+	// Idempotent Demo Profiles Seeding
+	if cfg.DemoSeed {
+		go func() {
+			seedCtx, seedCancel := context.WithTimeout(context.Background(), 20*time.Second)
+			defer seedCancel()
+			if err := seed.SeedDemoProfiles(seedCtx, repo); err != nil {
+				log.Printf("[Demo Seed] Notice: %v", err)
+			}
+		}()
+	}
+
 	// Initialize Local Storage provider for avatars
 	fileStorage, err := storage.NewLocalStorage(cfg.UploadDir, "/uploads", cfg.MaxUploadMB)
 	if err != nil {
@@ -48,7 +61,7 @@ func main() {
 	go wsHub.Run()
 
 	// Initialize Handlers
-	authHandler := auth.NewAuthHandler(repo, cfg.JWTSecret)
+	authHandler := auth.NewAuthHandler(repo, cfg.JWTSecret, cfg.AdminEmail)
 	profileHandler := profiles.NewProfileHandler(repo, fileStorage)
 	discoveryHandler := discovery.NewDiscoveryHandler(repo)
 	requestHandler := requests.NewRequestHandler(repo)
@@ -57,6 +70,7 @@ func main() {
 	cryptoHandler := crypto.NewCryptoHandler(repo)
 	blockHandler := blocks.NewBlockHandler(repo)
 	reportHandler := reports.NewReportHandler(repo)
+	analyticsHandler := analytics.NewAnalyticsHandler(repo)
 
 	// Set Gin mode
 	gin.SetMode(gin.ReleaseMode)
@@ -83,7 +97,7 @@ func main() {
 	// API Routes Group
 	api := router.Group("/api")
 	{
-		// Public Auth routes (rate limited: 10 requests per minute)
+		// Public Auth routes (rate limited: 15 requests per minute)
 		authLimiter := middleware.RateLimiter(15, time.Minute)
 		authGroup := api.Group("/auth")
 		{
@@ -92,6 +106,10 @@ func main() {
 			authGroup.POST("/logout", authHandler.Logout)
 			authGroup.GET("/me", middleware.AuthMiddleware(cfg.JWTSecret), authHandler.Me)
 		}
+
+		// Public Analytics event intake (rate limited: 120 per minute)
+		analyticsLimiter := middleware.RateLimiter(120, time.Minute)
+		api.POST("/analytics/track", analyticsLimiter, analyticsHandler.Track)
 
 		// Authenticated protected routes
 		protected := api.Group("")
@@ -126,15 +144,28 @@ func main() {
 			protected.GET("/conversations/:id/messages", chatHandler.GetMessages)
 			protected.POST("/conversations/:id/messages", chatHandler.SendMessage)
 
-			// E2EE Public Key Bundles (Zero private key exposure)
+			// E2EE Public Key Bundles & Zero-Knowledge Key Backups
 			protected.POST("/crypto/bundle", cryptoHandler.PublishKeyBundle)
 			protected.GET("/crypto/bundle/:userId", cryptoHandler.GetKeyBundle)
+			protected.POST("/crypto/backup", cryptoHandler.SaveKeyBackup)
+			protected.GET("/crypto/backup", cryptoHandler.GetKeyBackup)
 
 			// Safety: Blocks & Reports
 			protected.POST("/blocks", blockHandler.BlockUser)
 			protected.DELETE("/blocks/:userId", blockHandler.UnblockUser)
 			protected.GET("/blocks", blockHandler.GetBlockedUsers)
 			protected.POST("/reports", reportHandler.CreateReport)
+		}
+
+		// Admin-Only Protected Analytics Dashboard Routes
+		admin := api.Group("/admin")
+		admin.Use(middleware.AuthMiddleware(cfg.JWTSecret))
+		admin.Use(middleware.AdminMiddleware(cfg.AdminEmail))
+		{
+			admin.GET("/analytics/overview", analyticsHandler.GetOverview)
+			admin.GET("/analytics/funnel", analyticsHandler.GetFunnel)
+			admin.GET("/analytics/timeseries", analyticsHandler.GetTimeseries)
+			admin.GET("/analytics/traffic", analyticsHandler.GetTraffic)
 		}
 	}
 

@@ -53,11 +53,11 @@ export const Footer: React.FC = () => {
             Navratri 2026 Companion
           </div>
 
-          <h2 className="text-3xl sm:text-5xl lg:text-6xl font-bold font-festive tracking-tight text-white drop-shadow-md leading-[1.15]">
+          <h2 className="text-3xl sm:text-5xl lg:text-6xl font-bold font-display tracking-tight text-white drop-shadow-md leading-[1.15]">
             Still looking for your <span className="text-[#FF4081]">Dandiya +1?</span>
           </h2>
 
-          <p className="text-sm sm:text-base text-gray-200 font-light leading-relaxed max-w-lg mx-auto">
+          <p className="text-base text-gray-200 font-hand text-xl leading-relaxed max-w-lg mx-auto">
             Sync beats. Make memories. Find someone genuine to dance Dandiya and Garba with in your city tonight.
           </p>
 
@@ -130,7 +130,7 @@ export const Footer: React.FC = () => {
               <DandiyaIcon className="w-full h-full text-white" />
             </div>
             <div>
-              <span className="font-festive font-bold text-base text-white">Dandiya +1</span>
+              <span className="font-display font-bold text-base text-white">Dandiya +1</span>
               <span className="block text-[11px] text-gray-400">Seasonal Navratri Companion</span>
             </div>
           </div>

@@ -3,14 +3,14 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
 import { DandiyaIcon } from '../common/DandiyaIcon';
 import { getAssetUrl } from '../../lib/api';
-import { Menu, X, LogOut, User, MessageCircle, Heart, Compass, Bell } from 'lucide-react';
+import { Menu, X, LogOut, User, MessageCircle, Heart, Compass, Bell, ShieldCheck } from 'lucide-react';
 
 interface NavbarProps {
   incomingCount?: number;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ incomingCount = 0 }) => {
-  const { isAuthenticated, profile, logout } = useAuthStore();
+  const { isAuthenticated, user, profile, logout } = useAuthStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -23,7 +23,7 @@ export const Navbar: React.FC<NavbarProps> = ({ incomingCount = 0 }) => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <header className="sticky top-0 z-40 bg-white/85 backdrop-blur-md border-b border-pink-100/60 transition-all">
+    <header className="sticky top-0 z-40 bg-card/85 backdrop-blur-md border-b border-border transition-all">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-18">
           {/* Logo & Brand */}
@@ -32,10 +32,10 @@ export const Navbar: React.FC<NavbarProps> = ({ incomingCount = 0 }) => {
               <DandiyaIcon className="w-full h-full text-white" />
             </div>
             <div className="flex flex-col">
-              <span className="text-xl sm:text-2xl font-bold font-serif tracking-tight text-gray-900 group-hover:text-[#8B0036] transition-colors">
-                Dandiya <span className="text-[#D81B60]">+1</span>
+              <span className="text-xl sm:text-2xl font-bold font-display tracking-tight text-foreground group-hover:text-primary transition-colors">
+                Dandiya <span className="text-primary">+1</span>
               </span>
-              <span className="text-[10px] uppercase tracking-widest text-[#8B0036] font-semibold -mt-1 hidden sm:block">
+              <span className="text-[10px] uppercase tracking-widest text-primary font-semibold -mt-1 hidden sm:block">
                 Navratri Matchmaking
               </span>
             </div>
@@ -49,8 +49,8 @@ export const Navbar: React.FC<NavbarProps> = ({ incomingCount = 0 }) => {
                   to="/discover"
                   className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
                     isActive('/discover')
-                      ? 'bg-pink-50 text-[#8B0036] font-semibold'
-                      : 'text-gray-700 hover:text-[#8B0036] hover:bg-pink-50/50'
+                      ? 'bg-primary/10 text-primary font-semibold'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                   }`}
                 >
                   <Compass className="w-4 h-4" />
@@ -61,8 +61,8 @@ export const Navbar: React.FC<NavbarProps> = ({ incomingCount = 0 }) => {
                   to="/requests"
                   className={`relative flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
                     isActive('/requests')
-                      ? 'bg-pink-50 text-[#8B0036] font-semibold'
-                      : 'text-gray-700 hover:text-[#8B0036] hover:bg-pink-50/50'
+                      ? 'bg-primary/10 text-primary font-semibold'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                   }`}
                 >
                   <Bell className="w-4 h-4" />
@@ -78,8 +78,8 @@ export const Navbar: React.FC<NavbarProps> = ({ incomingCount = 0 }) => {
                   to="/matches"
                   className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
                     isActive('/matches')
-                      ? 'bg-pink-50 text-[#8B0036] font-semibold'
-                      : 'text-gray-700 hover:text-[#8B0036] hover:bg-pink-50/50'
+                      ? 'bg-primary/10 text-primary font-semibold'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                   }`}
                 >
                   <Heart className="w-4 h-4" />
@@ -90,19 +90,33 @@ export const Navbar: React.FC<NavbarProps> = ({ incomingCount = 0 }) => {
                   to="/chat"
                   className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
                     isActive('/chat')
-                      ? 'bg-pink-50 text-[#8B0036] font-semibold'
-                      : 'text-gray-700 hover:text-[#8B0036] hover:bg-pink-50/50'
+                      ? 'bg-primary/10 text-primary font-semibold'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                   }`}
                 >
                   <MessageCircle className="w-4 h-4" />
                   Chat
                 </Link>
 
-                <div className="h-5 w-px bg-gray-200 mx-2" />
+                {user?.role === 'admin' && (
+                  <Link
+                    to="/admin"
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
+                      isActive('/admin')
+                        ? 'bg-primary/10 text-primary font-semibold'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                    }`}
+                  >
+                    <ShieldCheck className="w-4 h-4 text-primary" />
+                    Analytics
+                  </Link>
+                )}
+
+                <div className="h-5 w-px bg-border mx-2" />
 
                 <Link
                   to="/profile"
-                  className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-full hover:bg-pink-50/60 transition-colors"
+                  className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-full hover:bg-muted transition-colors"
                 >
                   <div className="w-8 h-8 rounded-full p-0.5 bg-gradient-to-tr from-[#8B0036] to-[#FF4081]">
                     <img
@@ -113,15 +127,15 @@ export const Navbar: React.FC<NavbarProps> = ({ incomingCount = 0 }) => {
                         )}`
                       }
                       alt={profile?.firstName || 'Profile'}
-                      className="w-full h-full object-cover rounded-full bg-white"
+                      className="w-full h-full object-cover rounded-full bg-card"
                     />
                   </div>
-                  <span className="text-sm font-semibold text-gray-800">{profile?.firstName || 'My Profile'}</span>
+                  <span className="text-sm font-semibold text-foreground">{profile?.firstName || 'My Profile'}</span>
                 </Link>
 
                 <button
                   onClick={handleLogout}
-                  className="p-2 text-gray-400 hover:text-gray-700 rounded-xl hover:bg-gray-100 transition-colors"
+                  className="p-2 text-muted-foreground hover:text-foreground rounded-xl hover:bg-muted transition-colors cursor-pointer"
                   title="Log out"
                   aria-label="Log out"
                 >
@@ -132,29 +146,29 @@ export const Navbar: React.FC<NavbarProps> = ({ incomingCount = 0 }) => {
               <>
                 <a
                   href="#how-it-works"
-                  className="px-3.5 py-2 text-sm font-medium text-gray-600 hover:text-[#8B0036] transition-colors"
+                  className="px-3.5 py-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors cursor-pointer"
                 >
                   How It Works
                 </a>
                 <a
                   href="#privacy"
-                  className="px-3.5 py-2 text-sm font-medium text-gray-600 hover:text-[#8B0036] transition-colors"
+                  className="px-3.5 py-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors cursor-pointer"
                 >
                   Private Chat
                 </a>
 
-                <div className="h-5 w-px bg-gray-200 mx-2" />
+                <div className="h-5 w-px bg-border mx-2" />
 
                 <Link
                   to="/login"
-                  className="px-4 py-2 text-sm font-semibold text-[#8B0036] hover:text-[#D81B60] transition-colors"
+                  className="px-4 py-2 font-hand text-base font-semibold text-primary hover:underline transition-colors"
                 >
                   Sign In
                 </Link>
 
                 <Link
                   to="/register"
-                  className="px-5 py-2 rounded-xl text-sm font-semibold btn-festive-primary text-white shadow-sm"
+                  className="px-5 py-2 rounded-xl font-hand text-base font-semibold btn-festive-primary text-white shadow-sm"
                 >
                   Join Dandiya +1
                 </Link>
@@ -163,7 +177,8 @@ export const Navbar: React.FC<NavbarProps> = ({ incomingCount = 0 }) => {
           </nav>
 
           {/* Mobile menu trigger */}
-          <div className="flex md:hidden items-center gap-2">
+          <div className="flex md:hidden items-center gap-1.5">
+
             {isAuthenticated && incomingCount > 0 && (
               <Link to="/requests" className="p-2 text-[#D81B60] relative">
                 <Bell className="w-5 h-5" />
@@ -172,7 +187,7 @@ export const Navbar: React.FC<NavbarProps> = ({ incomingCount = 0 }) => {
             )}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+              className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted"
               aria-label="Toggle navigation menu"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -183,10 +198,10 @@ export const Navbar: React.FC<NavbarProps> = ({ incomingCount = 0 }) => {
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-pink-100 bg-white/95 backdrop-blur-md px-4 pt-3 pb-6 space-y-2 animate-in slide-in-from-top-2">
+        <div className="md:hidden border-t border-border bg-card/95 backdrop-blur-md px-4 pt-3 pb-6 space-y-2 animate-in slide-in-from-top-2">
           {isAuthenticated ? (
             <>
-              <div className="flex items-center gap-3 p-3 rounded-2xl bg-pink-50/50 mb-3">
+              <div className="flex items-center gap-3 p-3 rounded-2xl bg-muted/50 mb-3 border border-border">
                 <img
                   src={
                     getAssetUrl(profile?.photoUrl) ||
@@ -195,30 +210,30 @@ export const Navbar: React.FC<NavbarProps> = ({ incomingCount = 0 }) => {
                     )}`
                   }
                   alt={profile?.firstName}
-                  className="w-10 h-10 rounded-full object-cover border border-pink-200"
+                  className="w-10 h-10 rounded-full object-cover border border-border"
                 />
                 <div>
-                  <p className="font-bold text-gray-900">{profile?.firstName}</p>
-                  <p className="text-xs text-gray-500">📍 {profile?.city}</p>
+                  <p className="font-bold text-foreground">{profile?.firstName}</p>
+                  <p className="text-xs text-muted-foreground">📍 {profile?.city}</p>
                 </div>
               </div>
 
               <Link
                 to="/discover"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-800 hover:bg-pink-50"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted"
               >
-                <Compass className="w-4 h-4 text-[#8B0036]" />
+                <Compass className="w-4 h-4 text-primary" />
                 Discover Partners
               </Link>
 
               <Link
                 to="/requests"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-gray-800 hover:bg-pink-50"
+                className="flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted"
               >
                 <div className="flex items-center gap-3">
-                  <Bell className="w-4 h-4 text-[#8B0036]" />
+                  <Bell className="w-4 h-4 text-primary" />
                   <span>Dandiya Requests</span>
                 </div>
                 {incomingCount > 0 && (
@@ -231,37 +246,48 @@ export const Navbar: React.FC<NavbarProps> = ({ incomingCount = 0 }) => {
               <Link
                 to="/matches"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-800 hover:bg-pink-50"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted"
               >
-                <Heart className="w-4 h-4 text-[#8B0036]" />
+                <Heart className="w-4 h-4 text-primary" />
                 Mutual Matches
               </Link>
 
               <Link
                 to="/chat"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-800 hover:bg-pink-50"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted"
               >
-                <MessageCircle className="w-4 h-4 text-[#8B0036]" />
+                <MessageCircle className="w-4 h-4 text-primary" />
                 Private Chats
               </Link>
+
+              {user?.role === 'admin' && (
+                <Link
+                  to="/admin"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted"
+                >
+                  <ShieldCheck className="w-4 h-4 text-primary" />
+                  Admin Analytics
+                </Link>
+              )}
 
               <Link
                 to="/profile"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-800 hover:bg-pink-50"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted"
               >
-                <User className="w-4 h-4 text-[#8B0036]" />
+                <User className="w-4 h-4 text-primary" />
                 Edit Profile
               </Link>
 
-              <div className="pt-2 border-t border-gray-100">
+              <div className="pt-2 border-t border-border">
                 <button
                   onClick={() => {
                     setMobileMenuOpen(false);
                     handleLogout();
                   }}
-                  className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50"
+                  className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-destructive hover:bg-destructive/10 cursor-pointer"
                 >
                   <LogOut className="w-4 h-4" />
                   Log Out
@@ -273,14 +299,14 @@ export const Navbar: React.FC<NavbarProps> = ({ incomingCount = 0 }) => {
               <a
                 href="#how-it-works"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-xl text-sm font-medium text-gray-700 hover:bg-pink-50"
+                className="block px-3 py-2 rounded-xl text-sm font-medium text-foreground hover:bg-muted cursor-pointer"
               >
                 How It Works
               </a>
               <a
                 href="#privacy"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-xl text-sm font-medium text-gray-700 hover:bg-pink-50"
+                className="block px-3 py-2 rounded-xl text-sm font-medium text-foreground hover:bg-muted cursor-pointer"
               >
                 Private Chat (E2EE)
               </a>
@@ -288,14 +314,14 @@ export const Navbar: React.FC<NavbarProps> = ({ incomingCount = 0 }) => {
                 <Link
                   to="/login"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block w-full py-2.5 text-center text-sm font-semibold text-[#8B0036] border border-pink-200 rounded-xl hover:bg-pink-50"
+                  className="block w-full py-2.5 text-center font-hand text-base font-semibold text-primary border border-border rounded-xl hover:bg-muted"
                 >
                   Sign In
                 </Link>
                 <Link
                   to="/register"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block w-full py-2.5 text-center text-sm font-semibold btn-festive-primary text-white rounded-xl shadow-md"
+                  className="block w-full py-2.5 text-center font-hand text-base font-semibold btn-festive-primary text-white rounded-xl shadow-md"
                 >
                   Find My Dandiya +1
                 </Link>

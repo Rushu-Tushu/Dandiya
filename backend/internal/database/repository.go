@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/dandiya/dandiya-plus-one/internal/models"
 )
@@ -52,9 +53,11 @@ type Repository interface {
 	SaveMessage(ctx context.Context, msg *models.MessageEnvelope) error
 	GetMessages(ctx context.Context, convID string, limit, offset int) ([]*models.MessageEnvelope, error)
 
-	// Key Bundles (Public identity keys for E2EE)
+	// Key Bundles & Zero-Knowledge Encrypted Key Backups
 	UpsertKeyBundle(ctx context.Context, bundle *models.KeyBundle) error
 	GetKeyBundle(ctx context.Context, userID string) (*models.KeyBundle, error)
+	SaveEncryptedKeyBackup(ctx context.Context, backup *models.EncryptedKeyBackup) error
+	GetEncryptedKeyBackup(ctx context.Context, userID string) (*models.EncryptedKeyBackup, error)
 
 	// Safety: Blocks & Reports
 	CreateBlock(ctx context.Context, block *models.Block) error
@@ -62,4 +65,11 @@ type Repository interface {
 	IsBlocked(ctx context.Context, userA, userB string) (bool, error)
 	GetBlockedUserIDs(ctx context.Context, userID string) ([]string, error)
 	CreateReport(ctx context.Context, report *models.Report) error
+
+	// Admin Analytics & Metrics
+	TrackAnalyticsEvent(ctx context.Context, event *models.AnalyticsEvent) error
+	GetAnalyticsOverview(ctx context.Context, from, to time.Time) (*models.AnalyticsOverview, error)
+	GetAnalyticsFunnel(ctx context.Context, from, to time.Time) (*models.AnalyticsFunnel, error)
+	GetAnalyticsTimeseries(ctx context.Context, from, to time.Time) ([]*models.TimeseriesPoint, error)
+	GetAnalyticsTraffic(ctx context.Context, from, to time.Time) (*models.AnalyticsTraffic, error)
 }

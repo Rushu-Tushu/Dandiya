@@ -36,8 +36,18 @@ func (h *RequestHandler) SendRequest(c *gin.Context) {
 	}
 
 	// Verify target user exists
-	if _, err := h.repo.GetUserByID(c.Request.Context(), req.ToUserID); err != nil {
+	targetUser, err := h.repo.GetUserByID(c.Request.Context(), req.ToUserID)
+	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	// Do not allow sending requests to demo profiles
+	if targetUser.IsDemo {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":  "This is a demo profile to show what Dandiya +1 looks like. Demo profiles cannot receive connection requests.",
+			"isDemo": true,
+		})
 		return
 	}
 
@@ -73,6 +83,16 @@ func (h *RequestHandler) SendRequest(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send request"})
 		return
 	}
+
+	// Track analytics
+	_ = h.repo.TrackAnalyticsEvent(c.Request.Context(), &models.AnalyticsEvent{
+		ID:        uuid.New().String(),
+		VisitorID: currentUserID,
+		UserID:    currentUserID,
+		Type:      models.AnalyticsRequestSent,
+		Path:      "/requests",
+		CreatedAt: now,
+	})
 
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Dandiya request sent successfully",
@@ -139,6 +159,16 @@ func (h *RequestHandler) acceptAndCreateMatch(c *gin.Context, requestID, current
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to initiate conversation"})
 		return
 	}
+
+	// Track analytics match created
+	_ = h.repo.TrackAnalyticsEvent(c.Request.Context(), &models.AnalyticsEvent{
+		ID:        uuid.New().String(),
+		VisitorID: currentUserID,
+		UserID:    currentUserID,
+		Type:      models.AnalyticsMatchCreated,
+		Path:      "/matches",
+		CreatedAt: now,
+	})
 
 	// Load other user profile
 	otherID := connReq.FromUserID

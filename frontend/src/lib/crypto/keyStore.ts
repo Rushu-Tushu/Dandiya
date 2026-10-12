@@ -75,3 +75,40 @@ export async function getIdentityKeyPair(userId: string): Promise<CryptoKeyPair 
 
   return { publicKey, privateKey };
 }
+
+export async function hasIdentityKeyPair(userId: string): Promise<boolean> {
+  const db = await openKeyDB();
+  return new Promise((resolve) => {
+    try {
+      const tx = db.transaction(STORE_NAME, 'readonly');
+      const store = tx.objectStore(STORE_NAME);
+      const req = store.get(userId);
+      req.onsuccess = () => resolve(!!req.result);
+      req.onerror = () => resolve(false);
+    } catch {
+      resolve(false);
+    }
+  });
+}
+
+export async function getStoredKeyPairRecord(userId: string): Promise<StoredKeyPair | null> {
+  const db = await openKeyDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readonly');
+    const store = tx.objectStore(STORE_NAME);
+    const req = store.get(userId);
+    req.onsuccess = () => resolve(req.result || null);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+export async function saveRawKeyPairRecord(record: StoredKeyPair): Promise<void> {
+  const db = await openKeyDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    const store = tx.objectStore(STORE_NAME);
+    const req = store.put(record);
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error);
+  });
+}
