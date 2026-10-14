@@ -4,6 +4,7 @@ import { useAuthStore } from '../stores/authStore';
 import { api } from '../lib/api';
 import { DandiyaIcon } from '../components/common/DandiyaIcon';
 import { ProfileCard } from '../components/profile/ProfileCard';
+import { FestiveAudioPlayer } from '../components/common/FestiveAudioPlayer';
 import {
   Sparkles,
   ArrowRight,
@@ -508,6 +509,9 @@ export const LandingPage: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* Floating Bottom-Right Festive Music Player (Speaker On/Mute + Vertical Volume Line Slider) */}
+      <FestiveAudioPlayer />
     </div>
   );
 };
